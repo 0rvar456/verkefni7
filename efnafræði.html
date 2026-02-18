@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Efnablanda · Lotukerfi · Hvarf · Prófílar</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08090f; --s1:#0f1219; --s2:#161c28; --s3:#1e2637;
+    --border:#252f45; --border2:#2e3d5a;
+    --g:#00e5a0; --g2:#00b37a; --o:#ff7043; --b:#5b9cf6; --v:#c084fc; --y:#fbbf24;
+    --text:#e8eef8; --sub:#8899bb; --dim:#4a5a78; --glow:rgba(0,229,160,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .ambient{position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(ellipse 60% 40% at 15% 10%, rgba(0,229,160,.06) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 30% at 85% 85%, rgba(91,156,246,.07) 0%, transparent 60%),
+              radial-gradient(ellipse 40% 50% at 70% 20%, rgba(192,132,252,.04) 0%, transparent 60%);}
+
+  header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;
+    padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);
+    background:rgba(15,18,25,.85);backdrop-filter:blur(12px)}
+  .logo{display:flex;align-items:center;gap:.9rem}
+  .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--g),var(--b));
+    border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+    box-shadow:0 0 20px rgba(0,229,160,.3)}
+  .logo-text h1{font-family:'Playfair Display',serif;font-size:1.35rem;letter-spacing:-.5px}
+  .logo-text p{font-size:.65rem;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+  .header-right{font-size:.68rem;color:var(--dim);text-align:right;line-height:1.8}
+  .header-right span{color:var(--v);font-weight:700}
+
+  .main-layout{position:relative;z-index:1;display:grid;grid-template-columns:1fr 460px;
+    max-width:1680px;margin:0 auto;min-height:calc(100vh - 70px)}
+
+  /* LEFT */
+  .table-section{padding:1.1rem 1rem 1.3rem 1.3rem;border-right:1px solid var(--border);overflow-y:auto}
+  .sec-title{font-size:.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;
+    margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem}
+  .sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .legend{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.8rem}
+  .leg{display:flex;align-items:center;gap:.3rem;font-size:.6rem;color:var(--sub);
+    padding:.18rem .45rem;border:1px solid var(--border);border-radius:20px}
+  .leg-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+  .info-bar{background:var(--s2);border:1px solid var(--border);border-radius:10px;
+    padding:.6rem .9rem;font-size:.75rem;color:var(--sub);margin-bottom:.8rem;
+    min-height:2.6rem;display:flex;align-items:center;gap:.9rem;transition:all .25s;position:relative;overflow:hidden}
+  .info-bar.lit{border-color:var(--g2);color:var(--text);
+    background:linear-gradient(135deg,rgba(0,229,160,.06),var(--s2))}
+  .info-bar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--g);opacity:0;transition:opacity .25s}
+  .info-bar.lit::before{opacity:1}
+  .info-sym{font-family:'Playfair Display',serif;font-size:1.9rem;width:42px;text-align:center;flex-shrink:0;line-height:1}
+  .info-details{flex:1}
+  .info-name{font-weight:700;font-size:.88rem}
+  .info-meta{font-size:.68rem;color:var(--sub);margin-top:2px}
+  .info-hint{font-size:.63rem;color:var(--dim);background:var(--s3);border:1px solid var(--border);border-radius:6px;
+    padding:.25rem .55rem;white-space:nowrap}
+
+  .periodic-wrap{overflow-x:auto;padding-bottom:.3rem}
+  .periodic-table{display:grid;grid-template-columns:repeat(18,minmax(34px,1fr));gap:2px;min-width:720px}
+  .el{aspect-ratio:1;border-radius:5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:.52rem;border:1px solid transparent;transition:transform .13s ease,box-shadow .13s ease,border-color .13s;
+    user-select:none;min-width:0;position:relative}
+  .el:hover{transform:scale(1.36) translateZ(0);z-index:20;border-color:rgba(255,255,255,.25);box-shadow:0 4px 18px rgba(0,0,0,.55)}
+  .el.active{border-color:var(--g)!important;box-shadow:0 0 0 1px var(--g),0 0 10px var(--glow)}
+  .el.selected{outline:2px solid rgba(91,156,246,.75); outline-offset:1px}
+  .el .e-num{font-size:.4rem;opacity:.6;line-height:1.2}
+  .el .e-sym{font-weight:800;font-size:.78rem;line-height:1}
+  .el .e-mass{font-size:.35rem;opacity:.45;line-height:1.3}
+  .el.gap{background:transparent;border:none;cursor:default;pointer-events:none}
+
+  .alkali{background:rgba(239,68,68,.22)}
+  .alkali-earth{background:rgba(251,146,60,.22)}
+  .transition{background:rgba(56,189,248,.18)}
+  .post-trans{background:rgba(148,163,184,.2)}
+  .metalloid{background:rgba(34,211,238,.2)}
+  .nonmetal{background:rgba(0,229,160,.2)}
+  .halogen{background:rgba(167,139,250,.22)}
+  .noble{background:rgba(251,191,36,.18)}
+  .lanthanide{background:rgba(249,168,212,.2)}
+  .actinide{background:rgba(253,186,116,.2)}
+
+  /* RIGHT */
+  .right-panel{display:flex;flex-direction:column;overflow-y:auto;background:var(--s1)}
+  .mix-header{padding:1.1rem 1.2rem 0;display:flex;align-items:center;justify-content:space-between}
+  .mix-title{font-family:'Playfair Display',serif;font-style:italic;font-size:1.15rem}
+  .btn-clear{font-family:'Outfit',sans-serif;font-size:.65rem;color:var(--o);
+    background:rgba(255,112,67,.12);border:1px solid rgba(255,112,67,.3);border-radius:7px;
+    padding:.3rem .75rem;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+  .btn-clear:hover{background:rgba(255,112,67,.28)}
+
+  .box{margin:.8rem 1.2rem 0;background:var(--s2);border:1px solid var(--border);border-radius:11px;padding:.85rem 1rem}
+  .box-title{font-size:.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem}
+  .box-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+  select, input[type="text"]{
+    background:var(--s3);color:var(--text);border:1px solid var(--border);border-radius:8px;
+    padding:.35rem .55rem;font-family:'Outfit',sans-serif;font-size:.75rem;outline:none
+  }
+  select:focus, input[type="text"]:focus{border-color:var(--g2)}
+  .btn{
+    font-family:'Outfit',sans-serif;font-size:.62rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;
+    padding:.28rem .6rem;border-radius:8px;border:1px solid rgba(0,229,160,.35);
+    background:rgba(0,229,160,.12);color:var(--g);cursor:pointer;transition:all .15s
+  }
+  .btn:hover{background:rgba(0,229,160,.20)}
+  .btn-blue{
+    border-color:rgba(91,156,246,.35);
+    background:rgba(91,156,246,.12);color:var(--b)
+  }
+  .btn-blue:hover{background:rgba(91,156,246,.22)}
+  .out{
+    margin-top:.7rem;padding:.75rem .85rem;border-radius:10px;background:rgba(0,229,160,.04);
+    border:1px solid rgba(0,229,160,.14);color:var(--sub);font-size:.78rem;line-height:1.85;white-space:pre-wrap
+  }
+  .out strong{color:var(--text)}
+  .subtle{color:var(--dim)}
+
+  .formula-box{margin:.8rem 1.2rem 0;background:var(--s2);border:1px solid var(--border);border-radius:11px;
+    padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:3.1rem}
+  .formula-label{font-size:.58rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
+  .formula-text{font-family:'Playfair Display',serif;font-size:1.25rem;letter-spacing:2px;flex:1;text-align:center}
+  .mmass-pill{background:rgba(0,229,160,.11);border:1px solid rgba(0,229,160,.22);border-radius:7px;
+    padding:.25rem .65rem;font-size:.68rem;color:var(--g);white-space:nowrap}
+
+  .mix-list{flex:1;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.45rem;overflow-y:auto}
+  .empty-state{text-align:center;padding:2.2rem 1rem;color:var(--dim);font-size:.78rem;line-height:2.2}
+  .empty-state .big{font-size:2.2rem;margin-bottom:.3rem}
+  .mix-card{background:var(--s2);border:1px solid var(--border);border-radius:11px;padding:.8rem .85rem;
+    display:grid;grid-template-columns:auto 1fr auto;gap:.65rem;align-items:start}
+  .card-sym{width:42px;height:42px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+  .card-sym .s{font-weight:900;font-size:1rem}
+  .card-sym .n{font-size:.42rem;opacity:.55}
+  .card-name{font-size:.8rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-mmass{font-size:.62rem;color:var(--sub);margin-top:2px;margin-bottom:.55rem}
+  .input-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+  .inp-wrap{display:flex;align-items:center;background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:.12rem .4rem .12rem .1rem}
+  .inp-wrap:focus-within{border-color:var(--g2)}
+  .inp-wrap input{width:110px;background:transparent;border:none;color:var(--text);font-family:'Outfit',sans-serif;
+    font-size:.82rem;font-weight:900;text-align:right;padding:.18rem;outline:none}
+  .inp-unit{font-size:.6rem;color:var(--sub);white-space:nowrap;min-width:34px}
+  .mode-tabs{display:flex;background:var(--bg);border-radius:5px;padding:2px;gap:2px}
+  .mtab{font-family:'Outfit',sans-serif;font-size:.58rem;font-weight:900;padding:.18rem .42rem;border-radius:3px;border:none;
+    background:transparent;color:var(--dim);cursor:pointer;transition:all .13s}
+  .mtab.on{background:var(--s3);color:var(--g)}
+  .mini-btn{font-family:'Outfit',sans-serif;font-size:.58rem;font-weight:900;letter-spacing:.6px;text-transform:uppercase;
+    padding:.18rem .5rem;border-radius:6px;border:1px solid rgba(91,156,246,.35);background:rgba(91,156,246,.12);color:var(--b);cursor:pointer}
+  .mini-btn:hover{background:rgba(91,156,246,.22)}
+  .derived{font-size:.61rem;color:var(--sub);line-height:1.75;margin-top:.4rem}
+  .derived .dv{font-weight:900;color:var(--text)}
+  .derived .da{color:var(--v)}
+  .remove-x{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1.05rem;line-height:1;padding:.1rem .2rem;border-radius:6px}
+  .remove-x:hover{background:rgba(255,112,67,.2);color:var(--o)}
+
+  .totals-section{border-top:1px solid var(--border);padding:1rem 1.2rem}
+  .totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .tc{background:var(--s2);border:1px solid var(--border);border-radius:11px;padding:.9rem 1rem;position:relative;overflow:hidden}
+  .tc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+  .tc-mol::after{background:var(--g)} .tc-mass::after{background:var(--o)} .tc-mm::after{background:var(--b)} .tc-avo::after{background:var(--v)}
+  .tc-lbl{font-size:.57rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:.35rem}
+  .tc-val{font-family:'Playfair Display',serif;font-size:1.5rem;line-height:1;font-weight:900}
+  .tc-mol .tc-val{color:var(--g)} .tc-mass .tc-val{color:var(--o)} .tc-mm .tc-val{color:var(--b)} .tc-avo .tc-val{color:var(--v)}
+  .tc-unit{font-size:.62rem;color:var(--sub);margin-top:.25rem}
+
+  .formulas-footer{border-top:1px solid var(--border);padding:.9rem 1.2rem;background:rgba(0,229,160,.025)}
+  .fml{display:flex;flex-direction:column;gap:.3rem;font-size:.68rem;color:var(--sub);line-height:1.8}
+  .fml-row{display:flex;gap:.5rem}
+  .fml-eq{color:var(--g);font-weight:900;min-width:125px}
+
+  @media (max-width: 980px){
+    .main-layout{grid-template-columns:1fr}
+    .table-section{border-right:none;border-bottom:1px solid var(--border)}
+    .header-right{display:none}
+    header{padding:1rem 1.1rem}
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚗</div>
+    <div class="logo-text">
+      <h1>Efnablanda</h1>
+      <p>Lotukerfi · Prófil · Hvarf</p>
+    </div>
+  </div>
+  <div class="header-right">
+    Avogadro-talan: <span>6.02214076 × 10²³ mol⁻¹</span><br>
+    n = m/M &nbsp;·&nbsp; N = n × Nₐ &nbsp;·&nbsp; m = n × M
+  </div>
+</header>
+
+<div class="main-layout">
+  <!-- LEFT -->
+  <div class="table-section">
+    <div class="sec-title">Lotukerfið — smelltu til að bæta í blöndu · hægri smellur velur “frumefni-prófíl”</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:rgba(239,68,68,.8)"></div>Leðurjárn</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(251,146,60,.8)"></div>Jarðleðurjárn</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(56,189,248,.8)"></div>Umskiptiefni</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(148,163,184,.8)"></div>Málmar</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(34,211,238,.8)"></div>Hálfmálmar</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(0,229,160,.8)"></div>Óstefni</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(167,139,250,.8)"></div>Halógen</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(251,191,36,.8)"></div>Göfgar lofttegundir</div>
+    </div>
+
+    <div class="info-bar" id="infoBar">
+      <span style="font-size:1.7rem;opacity:.18;">⚛</span>
+      <span style="color:var(--dim);">Sveipaðu yfir frumefni til að sjá upplýsingar...</span>
+    </div>
+
+    <div class="periodic-wrap">
+      <div class="periodic-table" id="periodicTable"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="mix-header">
+      <div class="mix-title">Blandan</div>
+      <button class="btn-clear" onclick="clearAll()">Hreinsa allt</button>
+    </div>
+
+    <div class="formula-box">
+      <span class="formula-label">Form.</span>
+      <span class="formula-text" id="formulaText">—</span>
+      <span class="mmass-pill" id="mmassPill" style="display:none">— g/mol</span>
+    </div>
+
+    <!-- ELEMENT PROFILE (FASTUR KAFI) -->
+    <div class="box">
+      <div class="box-title">Frumefni — sjá aðeins um eitt</div>
+      <div class="row">
+        <select id="profileSel" onchange="setSelected(this.value)"><option value="">Veldu frumefni</option></select>
+        <button class="btn btn-blue" onclick="setSelectedFromMix()">Velja úr blöndu</button>
+        <button class="btn" onclick="clearSelected()">Hreinsa val</button>
+      </div>
+      <div class="out" id="profileOut">Veldu frumefni til að sjá prófíl.</div>
+    </div>
+
+    <!-- REACTION (2 ELEMENTS) -->
+    <div class="box">
+      <div class="box-title">Veldu 2 — geta þau efnahvarfast?</div>
+      <div class="row">
+        <select id="rxA" onchange="updateReaction()"><option value="">Frumefni A</option></select>
+        <select id="rxB" onchange="updateReaction()"><option value="">Frumefni B</option></select>
+        <button class="btn" onclick="updateReaction()">Greina</button>
+      </div>
+      <div class="out" id="rxOut">Veldu tvö frumefni til að fá niðurstöðu.</div>
+    </div>
+
+    <!-- COMPOUND FINDER (2+ ELEMENTS) -->
+    <div class="box">
+      <div class="box-title">Veldu 2+ — hvaða efni/sameind getur myndast?</div>
+      <div class="row" style="width:100%">
+        <select id="cmpSel" multiple size="6" onchange="updateCompoundFinder()" style="min-width:100%"></select>
+      </div>
+      <div class="out" id="cmpOut">Veldu 2 eða fleiri (CTRL/⌘ fyrir mörg).</div>
+      <div class="subtle" style="margin-top:.55rem;font-size:.72rem;">
+        (Leitar í algengum efnum + reiknar tvíefna jónasölt sjálfkrafa ef við á.)
+      </div>
+    </div>
+
+    <!-- MIX LIST -->
+    <div class="mix-list" id="mixList">
+      <div class="empty-state" id="emptyState">
+        <div class="big">🧪</div>
+        Smelltu á frumefni í lotukerfinu<br>
+        til að bæta þeim við blönduna.<br>
+        Settu inn <strong style="color:var(--g)">grömm</strong>, <strong style="color:var(--b)">mól</strong> eða <strong style="color:var(--v)">atóm</strong>.
+      </div>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="totals-section" id="totalsSection" style="display:none;">
+      <div class="sec-title" style="margin-bottom:.7rem;">Samtölur</div>
+      <div class="totals-grid">
+        <div class="tc tc-mol">
+          <div class="tc-lbl">Heildar Mól</div>
+          <div class="tc-val" id="ttlMol">—</div>
+          <div class="tc-unit">mol</div>
+        </div>
+        <div class="tc tc-mass">
+          <div class="tc-lbl">Heildar Massi</div>
+          <div class="tc-val" id="ttlMass">—</div>
+          <div class="tc-unit">g</div>
+        </div>
+        <div class="tc tc-mm">
+          <div class="tc-lbl">Meðal Mólmassi</div>
+          <div class="tc-val" id="ttlMmass">—</div>
+          <div class="tc-unit">g/mol</div>
+        </div>
+        <div class="tc tc-avo">
+          <div class="tc-lbl">Heildar Eindir</div>
+          <div class="tc-val" id="ttlAvo">—</div>
+          <div class="tc-unit">× 10²³</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formulas-footer">
+      <div class="sec-title" style="margin-bottom:.5rem;">Formúlur</div>
+      <div class="fml">
+        <div class="fml-row"><span class="fml-eq">n = m ÷ M</span><span>n=mól, m=massi(g), M=mólmassi(g/mol)</span></div>
+        <div class="fml-row"><span class="fml-eq">N = n × Nₐ</span><span>N=fjöldi einda, Nₐ=6.022×10²³</span></div>
+        <div class="fml-row"><span class="fml-eq">m = n × M</span><span>massi = mól × mólmassi</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ===================== CONSTANTS ===================== */
+const AVOGADRO = 6.02214076e23;
+
+const CAT = {
+  'alkali':       ['alkali',       '#ef4444'],
+  'alkali-earth': ['alkali-earth', '#fb923c'],
+  'transition':   ['transition',   '#38bdf8'],
+  'post-trans':   ['post-trans',   '#94a3b8'],
+  'metalloid':    ['metalloid',    '#22d3ee'],
+  'nonmetal':     ['nonmetal',     '#00e5a0'],
+  'halogen':      ['halogen',      '#c084fc'],
+  'noble':        ['noble',        '#fbbf24'],
+  'lanthanide':   ['lanthanide',   '#f9a8d4'],
+  'actinide':     ['actinide',     '#fdb977'],
+};
+
+/* ===================== FULL PERIODIC DATA (1–118) ===================== */
+/* NOTE: Masses are standard atomic weights (approx). For some superheavy, values are bracketed mass numbers in many tables.
+   Here we keep them as numbers so the app works. */
+const EL = [
+  {n:1,s:'H',name:'Vetni',m:1.008,c:'nonmetal',g:1,p:1},
+  {n:2,s:'He',name:'Helín',m:4.0026,c:'noble',g:18,p:1},
+  {n:3,s:'Li',name:'Litín',m:6.94,c:'alkali',g:1,p:2},
+  {n:4,s:'Be',name:'Beryllín',m:9.0122,c:'alkali-earth',g:2,p:2},
+  {n:5,s:'B',name:'Bór',m:10.81,c:'metalloid',g:13,p:2},
+  {n:6,s:'C',name:'Kolefni',m:12.011,c:'nonmetal',g:14,p:2},
+  {n:7,s:'N',name:'Nitur',m:14.007,c:'nonmetal',g:15,p:2},
+  {n:8,s:'O',name:'Súrefni',m:15.999,c:'nonmetal',g:16,p:2},
+  {n:9,s:'F',name:'Flúor',m:18.998,c:'halogen',g:17,p:2},
+  {n:10,s:'Ne',name:'Neon',m:20.180,c:'noble',g:18,p:2},
+  {n:11,s:'Na',name:'Natríum',m:22.990,c:'alkali',g:1,p:3},
+  {n:12,s:'Mg',name:'Magnesín',m:24.305,c:'alkali-earth',g:2,p:3},
+  {n:13,s:'Al',name:'Ál',m:26.982,c:'post-trans',g:13,p:3},
+  {n:14,s:'Si',name:'Kísill',m:28.085,c:'metalloid',g:14,p:3},
+  {n:15,s:'P',name:'Fosfór',m:30.974,c:'nonmetal',g:15,p:3},
+  {n:16,s:'S',name:'Brennisteinn',m:32.06,c:'nonmetal',g:16,p:3},
+  {n:17,s:'Cl',name:'Klór',m:35.45,c:'halogen',g:17,p:3},
+  {n:18,s:'Ar',name:'Argon',m:39.948,c:'noble',g:18,p:3},
+  {n:19,s:'K',name:'Kalín',m:39.098,c:'alkali',g:1,p:4},
+  {n:20,s:'Ca',name:'Kalsín',m:40.078,c:'alkali-earth',g:2,p:4},
+  {n:21,s:'Sc',name:'Skandín',m:44.956,c:'transition',g:3,p:4},
+  {n:22,s:'Ti',name:'Títan',m:47.867,c:'transition',g:4,p:4},
+  {n:23,s:'V',name:'Vanadín',m:50.942,c:'transition',g:5,p:4},
+  {n:24,s:'Cr',name:'Króm',m:51.996,c:'transition',g:6,p:4},
+  {n:25,s:'Mn',name:'Mangan',m:54.938,c:'transition',g:7,p:4},
+  {n:26,s:'Fe',name:'Járn',m:55.845,c:'transition',g:8,p:4},
+  {n:27,s:'Co',name:'Kóbalt',m:58.933,c:'transition',g:9,p:4},
+  {n:28,s:'Ni',name:'Nikkel',m:58.693,c:'transition',g:10,p:4},
+  {n:29,s:'Cu',name:'Kopar',m:63.546,c:'transition',g:11,p:4},
+  {n:30,s:'Zn',name:'Sink',m:65.38,c:'transition',g:12,p:4},
+  {n:31,s:'Ga',name:'Gallín',m:69.723,c:'post-trans',g:13,p:4},
+  {n:32,s:'Ge',name:'Germanín',m:72.630,c:'metalloid',g:14,p:4},
+  {n:33,s:'As',name:'Arsen',m:74.922,c:'metalloid',g:15,p:4},
+  {n:34,s:'Se',name:'Selen',m:78.971,c:'nonmetal',g:16,p:4},
+  {n:35,s:'Br',name:'Bróm',m:79.904,c:'halogen',g:17,p:4},
+  {n:36,s:'Kr',name:'Kryptón',m:83.798,c:'noble',g:18,p:4},
+  {n:37,s:'Rb',name:'Rúbidín',m:85.468,c:'alkali',g:1,p:5},
+  {n:38,s:'Sr',name:'Strontín',m:87.62,c:'alkali-earth',g:2,p:5},
+  {n:39,s:'Y',name:'Ytrín',m:88.906,c:'transition',g:3,p:5},
+  {n:40,s:'Zr',name:'Sirkónín',m:91.224,c:'transition',g:4,p:5},
+  {n:41,s:'Nb',name:'Nióbín',m:92.906,c:'transition',g:5,p:5},
+  {n:42,s:'Mo',name:'Mólýbden',m:95.95,c:'transition',g:6,p:5},
+  {n:43,s:'Tc',name:'Teknetín',m:98,c:'transition',g:7,p:5},
+  {n:44,s:'Ru',name:'Rútenín',m:101.07,c:'transition',g:8,p:5},
+  {n:45,s:'Rh',name:'Ródín',m:102.91,c:'transition',g:9,p:5},
+  {n:46,s:'Pd',name:'Palladín',m:106.42,c:'transition',g:10,p:5},
+  {n:47,s:'Ag',name:'Silfur',m:107.87,c:'transition',g:11,p:5},
+  {n:48,s:'Cd',name:'Kadmín',m:112.41,c:'transition',g:12,p:5},
+  {n:49,s:'In',name:'Indín',m:114.82,c:'post-trans',g:13,p:5},
+  {n:50,s:'Sn',name:'Tin',m:118.71,c:'post-trans',g:14,p:5},
+  {n:51,s:'Sb',name:'Antimón',m:121.76,c:'metalloid',g:15,p:5},
+  {n:52,s:'Te',name:'Tellúr',m:127.60,c:'metalloid',g:16,p:5},
+  {n:53,s:'I',name:'Joð',m:126.90,c:'halogen',g:17,p:5},
+  {n:54,s:'Xe',name:'Xenon',m:131.29,c:'noble',g:18,p:5},
+  {n:55,s:'Cs',name:'Sesín',m:132.91,c:'alkali',g:1,p:6},
+  {n:56,s:'Ba',name:'Barín',m:137.33,c:'alkali-earth',g:2,p:6},
+
+  {n:57,s:'La',name:'Lantan',m:138.91,c:'lanthanide',g:3,p:8},
+  {n:58,s:'Ce',name:'Cer',m:140.12,c:'lanthanide',g:4,p:8},
+  {n:59,s:'Pr',name:'Praseódým',m:140.91,c:'lanthanide',g:5,p:8},
+  {n:60,s:'Nd',name:'Neódým',m:144.24,c:'lanthanide',g:6,p:8},
+  {n:61,s:'Pm',name:'Prómetín',m:145,c:'lanthanide',g:7,p:8},
+  {n:62,s:'Sm',name:'Samarín',m:150.36,c:'lanthanide',g:8,p:8},
+  {n:63,s:'Eu',name:'Evrópín',m:151.96,c:'lanthanide',g:9,p:8},
+  {n:64,s:'Gd',name:'Gadólíníum',m:157.25,c:'lanthanide',g:10,p:8},
+  {n:65,s:'Tb',name:'Terbíum',m:158.93,c:'lanthanide',g:11,p:8},
+  {n:66,s:'Dy',name:'Dysprósíum',m:162.50,c:'lanthanide',g:12,p:8},
+  {n:67,s:'Ho',name:'Hólmíum',m:164.93,c:'lanthanide',g:13,p:8},
+  {n:68,s:'Er',name:'Erbíum',m:167.26,c:'lanthanide',g:14,p:8},
+  {n:69,s:'Tm',name:'Túlíum',m:168.93,c:'lanthanide',g:15,p:8},
+  {n:70,s:'Yb',name:'Ytterbíum',m:173.04,c:'lanthanide',g:16,p:8},
+  {n:71,s:'Lu',name:'Lútesíum',m:174.97,c:'lanthanide',g:17,p:8},
+
+  {n:72,s:'Hf',name:'Hafníum',m:178.49,c:'transition',g:4,p:6},
+  {n:73,s:'Ta',name:'Tantal',m:180.95,c:'transition',g:5,p:6},
+  {n:74,s:'W',name:'Wolfram',m:183.84,c:'transition',g:6,p:6},
+  {n:75,s:'Re',name:'Rheníum',m:186.21,c:'transition',g:7,p:6},
+  {n:76,s:'Os',name:'Ósmíum',m:190.23,c:'transition',g:8,p:6},
+  {n:77,s:'Ir',name:'Irídíum',m:192.22,c:'transition',g:9,p:6},
+  {n:78,s:'Pt',name:'Platína',m:195.08,c:'transition',g:10,p:6},
+  {n:79,s:'Au',name:'Gull',m:196.97,c:'transition',g:11,p:6},
+  {n:80,s:'Hg',name:'Kvikasilfur',m:200.59,c:'transition',g:12,p:6},
+  {n:81,s:'Tl',name:'Tallíum',m:204.38,c:'post-trans',g:13,p:6},
+  {n:82,s:'Pb',name:'Blý',m:207.2,c:'post-trans',g:14,p:6},
+  {n:83,s:'Bi',name:'Bismút',m:208.98,c:'post-trans',g:15,p:6},
+  {n:84,s:'Po',name:'Pólóníum',m:209,c:'metalloid',g:16,p:6},
+  {n:85,s:'At',name:'Astatín',m:210,c:'halogen',g:17,p:6},
+  {n:86,s:'Rn',name:'Radon',m:222,c:'noble',g:18,p:6},
+  {n:87,s:'Fr',name:'Fransíum',m:223,c:'alkali',g:1,p:7},
+  {n:88,s:'Ra',name:'Radíum',m:226,c:'alkali-earth',g:2,p:7},
+
+  {n:89,s:'Ac',name:'Aktíníum',m:227,c:'actinide',g:3,p:9},
+  {n:90,s:'Th',name:'Þóríum',m:232.04,c:'actinide',g:4,p:9},
+  {n:91,s:'Pa',name:'Prótaktíníum',m:231.04,c:'actinide',g:5,p:9},
+  {n:92,s:'U',name:'Úran',m:238.03,c:'actinide',g:6,p:9},
+  {n:93,s:'Np',name:'Neptúníum',m:237,c:'actinide',g:7,p:9},
+  {n:94,s:'Pu',name:'Plútóníum',m:244,c:'actinide',g:8,p:9},
+  {n:95,s:'Am',name:'Ameríkíum',m:243,c:'actinide',g:9,p:9},
+  {n:96,s:'Cm',name:'Kúríum',m:247,c:'actinide',g:10,p:9},
+  {n:97,s:'Bk',name:'Berkelíum',m:247,c:'actinide',g:11,p:9},
+  {n:98,s:'Cf',name:'Kaliforníum',m:251,c:'actinide',g:12,p:9},
+  {n:99,s:'Es',name:'Einsteíníum',m:252,c:'actinide',g:13,p:9},
+  {n:100,s:'Fm',name:'Fermíum',m:257,c:'actinide',g:14,p:9},
+  {n:101,s:'Md',name:'Mendelévíum',m:258,c:'actinide',g:15,p:9},
+  {n:102,s:'No',name:'Nóbelíum',m:259,c:'actinide',g:16,p:9},
+  {n:103,s:'Lr',name:'Lawrensíum',m:262,c:'actinide',g:17,p:9},
+
+  {n:104,s:'Rf',name:'Rutherfordíum',m:267,c:'transition',g:4,p:7},
+  {n:105,s:'Db',name:'Dubníum',m:268,c:'transition',g:5,p:7},
+  {n:106,s:'Sg',name:'Seaborgíum',m:271,c:'transition',g:6,p:7},
+  {n:107,s:'Bh',name:'Bohrium',m:270,c:'transition',g:7,p:7},
+  {n:108,s:'Hs',name:'Hassíum',m:277,c:'transition',g:8,p:7},
+  {n:109,s:'Mt',name:'Meitneríum',m:276,c:'transition',g:9,p:7},
+  {n:110,s:'Ds',name:'Darmstadtíum',m:281,c:'transition',g:10,p:7},
+  {n:111,s:'Rg',name:'Röntgeníum',m:282,c:'transition',g:11,p:7},
+  {n:112,s:'Cn',name:'Kópernikíum',m:285,c:'transition',g:12,p:7},
+  {n:113,s:'Nh',name:'Nihóníum',m:286,c:'post-trans',g:13,p:7},
+  {n:114,s:'Fl',name:'Fleróvíum',m:289,c:'post-trans',g:14,p:7},
+  {n:115,s:'Mc',name:'Moskóvíum',m:290,c:'post-trans',g:15,p:7},
+  {n:116,s:'Lv',name:'Livermóríum',m:293,c:'post-trans',g:16,p:7},
+  {n:117,s:'Ts',name:'Tennessín',m:294,c:'halogen',g:17,p:7},
+  {n:118,s:'Og',name:'Óganessón',m:294,c:'noble',g:18,p:7},
+];
+
+/* ===================== COMMON COMPOUNDS LIST ===================== */
+const KNOWN = [
+  {formula:"H2O", name:"Vatn"},
+  {formula:"H2O2", name:"Vetnisperoxíð"},
+  {formula:"CO2", name:"Koltvísýringur"},
+  {formula:"CO", name:"Kolmónoxíð"},
+  {formula:"CH4", name:"Metan"},
+  {formula:"NH3", name:"Ammoníak"},
+  {formula:"NaCl", name:"Borðsalt (natríumklóríð)"},
+  {formula:"KCl", name:"Kalíumklóríð"},
+  {formula:"MgCl2", name:"Magnesíumklóríð"},
+  {formula:"CaCl2", name:"Kalsíumklóríð"},
+  {formula:"NaOH", name:"Natríumhýdroxíð"},
+  {formula:"HCl", name:"Vetnisklóríð (saltsýra í vatni)"},
+  {formula:"H2SO4", name:"Brennisteinssýra"},
+  {formula:"HNO3", name:"Saltpéturssýra"},
+  {formula:"NaHCO3", name:"Matarsódi (natríumvetniskarbónat)"},
+  {formula:"CaCO3", name:"Kalsíumkarbónat (kalksteinn/kríta)"},
+  {formula:"Fe2O3", name:"Járn(III)oxíð (ryð)"},
+  {formula:"Al2O3", name:"Áloxíð"},
+  {formula:"MgO", name:"Magnesíumoxíð"},
+  {formula:"SO2", name:"Brennisteinsdíoxíð"},
+  {formula:"SO3", name:"Brennisteinstríoxíð"},
+  {formula:"NO2", name:"Niturdíoxíð"},
+  {formula:"O2", name:"Súrefni (sameind)"},
+  {formula:"N2", name:"Nitur (sameind)"},
+  {formula:"H2", name:"Vetni (sameind)"},
+  {formula:"Cl2", name:"Klór (sameind)"},
+];
+
+/* ===================== DERIVED DATA ===================== */
+KNOWN.forEach(k => k.counts = parseFormulaToCounts(k.formula));
+
+/* ===================== STATE ===================== */
+const mix = {};               // sym -> { el, mode, value }
+let selectedSym = "";         // for profile panel
+
+/* ===================== HELPERS ===================== */
+function bySym(sym){ return EL.find(e => e.s === sym) || null; }
+function parseNum(x){
+  const v = (x ?? '').toString().trim();
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function fmt(n, d=4){
+  if(!Number.isFinite(n) || n===0) return '0';
+  if(Math.abs(n) >= 0.001 && Math.abs(n) < 100000) return parseFloat(n.toPrecision(d)).toString();
+  return n.toExponential(d-1);
+}
+function fmtAvo(n){
+  if(!Number.isFinite(n) || n===0) return '0';
+  return parseFloat((n/1e23).toPrecision(4)).toString();
+}
+function labelCat(c){
+  const map = {
+    'alkali':'Leðurjárn (alkali)',
+    'alkali-earth':'Jarðleðurjárn',
+    'transition':'Umskiptiefni',
+    'post-trans':'Málmur',
+    'metalloid':'Hálfmálmur',
+    'nonmetal':'Óstefni',
+    'halogen':'Halógen',
+    'noble':'Göfug lofttegund',
+    'lanthanide':'Lantaníð',
+    'actinide':'Aktaníð'
+  };
+  return map[c] || c;
+}
+function isMetal(el){ return ['alkali','alkali-earth','transition','post-trans','lanthanide','actinide'].includes(el.c); }
+function isNonmetal(el){ return ['nonmetal','halogen'].includes(el.c); }
+function isHalogen(el){ return el.c === 'halogen'; }
+function isNoble(el){ return el.c === 'noble'; }
+function isMetalloid(el){ return el.c === 'metalloid'; }
+
+/* subscripts */
+function toSubscriptFormula(formula){
+  const sub = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+  return formula.replace(/\d/g, d => sub[d] || d);
+}
+
+/* parse formula -> counts */
+function parseFormulaToCounts(formula){
+  const counts = {};
+  const re = /([A-Z][a-z]?)(\d*)/g;
+  let m;
+  while((m = re.exec(formula)) !== null){
+    const sym = m[1];
+    const n = m[2] ? Number(m[2]) : 1;
+    counts[sym] = (counts[sym] || 0) + n;
+  }
+  return counts;
+}
+function countsSubset(targetCounts, chosenSet){
+  return Object.keys(targetCounts).every(sym => chosenSet.has(sym));
+}
+
+/* ===================== CALC FOR MIX ===================== */
+function calc(entry){
+  const M = entry.el.m;
+  const v = parseNum(entry.value);
+  let mol=0, mass=0, particles=0;
+
+  if(entry.mode === 'g'){
+    mass = v;
+    mol = v / M;
+    particles = mol * AVOGADRO;
+  } else if(entry.mode === 'mol'){
+    mol = v;
+    mass = v * M;
+    particles = mol * AVOGADRO;
+  } else {
+    particles = v;
+    mol = particles / AVOGADRO;
+    mass = mol * M;
+  }
+  return {mol,mass,particles};
+}
+
+/* ===================== REACTIVITY / PROFILE TEXT ===================== */
+function reactivityMiniText(el){
+  if(isNoble(el)) return 'Göfug lofttegund: ytri rafeindaskel er oft full → hvarfast sjaldan.';
+  if(el.c==='alkali') return 'Leðurjárn: 1 gildisrafeind → missir hana auðveldlega → mjög hvarfgjarnt.';
+  if(el.c==='halogen') return 'Halógen: vantar oft 1 rafeind → tekur hana auðveldlega → mjög hvarfgjarnt (með málmum).';
+  if(isMetal(el)) return 'Málmur: vill oft missa rafeindir → + jón → hvarfast gjarnan við óstefni.';
+  if(isMetalloid(el)) return 'Hálfmálmur: milliheima → hvarfgirni fer oft eftir pari og aðstæðum.';
+  return 'Óstefni: deilir oft rafeindum (samgilt) eða tekur rafeindir til að verða stöðugra.';
+}
+
+/* ===================== SIMPLE IONIC FORMULA (BINARY) ===================== */
+function ox(el){
+  // simplified common oxidation states
+  const special = {
+    'H': +1,
+    'O': -2,
+    'F': -1, 'Cl': -1, 'Br': -1, 'I': -1,
+    'Li': +1, 'Na': +1, 'K': +1, 'Rb': +1, 'Cs': +1, 'Fr': +1,
+    'Be': +2, 'Mg': +2, 'Ca': +2, 'Sr': +2, 'Ba': +2, 'Ra': +2,
+    'Al': +3,
+    'Zn': +2, 'Ag': +1,
+    'Fe': +2, // simplified
+  };
+  if(special[el.s] !== undefined) return special[el.s];
+  if(el.c === 'alkali') return +1;
+  if(el.c === 'alkali-earth') return +2;
+  if(el.c === 'halogen') return -1;
+  if(el.s === 'O') return -2;
+  return null;
+}
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
+function lcm(a,b){ return Math.abs(a*b)/gcd(a,b); }
+
+function buildBinaryIonicFormula(a,b){
+  const aOx = ox(a), bOx = ox(b);
+  if(aOx === null || bOx === null) return null;
+  if((aOx>0 && bOx>0) || (aOx<0 && bOx<0)) return null;
+
+  const cat = aOx>0 ? a : b;
+  const an  = aOx<0 ? a : b;
+  const catV = Math.abs(ox(cat));
+  const anV  = Math.abs(ox(an));
+
+  const L = lcm(catV, anV);
+  const catN = L / catV;
+  const anN  = L / anV;
+
+  const formula = cat.s + (catN>1 ? catN : '') + an.s + (anN>1 ? anN : '');
+  return { formula, cat, an };
+}
+
+/* ===================== REACTION PREDICTION ===================== */
+function predictReactionAndProduct(a,b){
+  if(isNoble(a) || isNoble(b)){
+    const ng = isNoble(a) ? a : b;
+    return {
+      likely:false,
+      title:"Ólíklegt (göfug lofttegund)",
+      explain:`${ng.s} er göfug lofttegund og hvarfast venjulega ekki við venjulegar aðstæður.`,
+      product:null,
+      also:[]
+    };
+  }
+
+  // metal + nonmetal => ionic likely
+  if((isMetal(a) && isNonmetal(b)) || (isMetal(b) && isNonmetal(a))){
+    const ionic = buildBinaryIonicFormula(a,b);
+    let product = null;
+    if(ionic){
+      const known = KNOWN.find(k => k.formula === ionic.formula);
+      product = {
+        formula: ionic.formula,
+        pretty: toSubscriptFormula(ionic.formula),
+        name: known ? known.name : "Jónasamband (salt)"
+      };
+    }
+    return {
+      likely:true,
+      title:"Mjög líklegt (jónatengi)",
+      explain:`Málmur missir rafeindir (+ jón) og óstefni tekur rafeindir (− jón). Jónir dragast saman → salt.`,
+      product,
+      also:[]
+    };
+  }
+
+  // nonmetal + nonmetal => covalent possible; show known molecules containing these 2
+  if(isNonmetal(a) && isNonmetal(b)){
+    const also = KNOWN.filter(k => countsSubset(k.counts, new Set([a.s,b.s])));
+    return {
+      likely:true,
+      title:"Líklegt (samgilt tengi)",
+      explain:`Óstefni + óstefni deila oft rafeindum. Hvaða sameind myndast fer eftir hlutföllum/stuðlum.`,
+      product:null,
+      also
+    };
+  }
+
+  // metal + metal
+  if(isMetal(a) && isMetal(b)){
+    return {
+      likely:false,
+      title:"Ólíklegt sem “sameind”",
+      explain:`Málmur + málmur myndar sjaldan skýra sameind (oft málmblendi eða engin einföld formúla).`,
+      product:null,
+      also:[]
+    };
+  }
+
+  // metalloid cases
+  if(isMetalloid(a) || isMetalloid(b)){
+    const also = KNOWN.filter(k => countsSubset(k.counts, new Set([a.s,b.s])));
+    return {
+      likely:true,
+      title:"Stundum (fer eftir aðstæðum)",
+      explain:`Hálfmálmar eru milliheima. Útkoma fer oft eftir hlutföllum, hitastigi og hvaða efni hitt er.`,
+      product:null,
+      also
+    };
+  }
+
+  return {
+    likely:false,
+    title:"Óvíst",
+    explain:"Þetta par fellur ekki skýrt í einföldu reglurnar hér.",
+    product:null,
+    also:[]
+  };
+}
+
+/* ===================== BUILD PERIODIC TABLE GRID ===================== */
+function buildTable(){
+  const wrap = document.getElementById('periodicTable');
+  wrap.innerHTML = "";
+
+  const grid = new Array(10*18).fill(null);
+  EL.forEach(el=>{
+    const row = el.p <= 7 ? el.p - 1 : (el.p === 8 ? 8 : 9);
+    const col = el.g - 1;
+    grid[row*18+col] = el;
+  });
+
+  grid.forEach(el=>{
+    const cell = document.createElement('div');
+    if(el){
+      const [cls,color] = CAT[el.c] || ['nonmetal','#00e5a0'];
+      cell.className = `el ${cls}`;
+      cell.innerHTML = `<span class="e-num">${el.n}</span><span class="e-sym">${el.s}</span><span class="e-mass">${el.m}</span>`;
+      cell.dataset.sym = el.s;
+
+      cell.addEventListener('mouseenter', ()=>showInfo(el,color));
+      cell.addEventListener('mouseleave', clearInfo);
+
+      // Left click: add/remove in mix
+      cell.addEventListener('click', ()=>toggleEl(el));
+
+      // Right click (contextmenu): select for profile (and prevent menu)
+      cell.addEventListener('contextmenu', (e)=>{
+        e.preventDefault();
+        setSelected(el.s);
+      });
+
+      // Double click: also select for profile
+      cell.addEventListener('dblclick', ()=>setSelected(el.s));
+    } else {
+      cell.className = 'gap';
+    }
+    wrap.appendChild(cell);
+  });
+}
+
+function showInfo(el,color){
+  const b = document.getElementById('infoBar');
+  b.className = 'info-bar lit';
+  b.innerHTML = `
+    <div class="info-sym" style="color:${color}">${el.s}</div>
+    <div class="info-details">
+      <div class="info-name">${el.name}</div>
+      <div class="info-meta">Sætistala: ${el.n} · Flokkur: <strong style="color:${color}">${labelCat(el.c)}</strong> · Mólmassi: <strong style="color:${color}">${el.m} g/mol</strong></div>
+    </div>
+    <div class="info-hint">${mix[el.s] ? '✓ Í blöndu — smelltu til að fjarlægja' : 'Smelltu til að bæta við'}<br><span style="opacity:.7">Hægri smellur = prófíl</span></div>
+  `;
+}
+function clearInfo(){
+  const b = document.getElementById('infoBar');
+  b.className = 'info-bar';
+  b.innerHTML = `<span style="font-size:1.7rem;opacity:.18;">⚛</span><span style="color:var(--dim);">Sveipaðu yfir frumefni til að sjá upplýsingar...</span>`;
+}
+
+/* ===================== MIX UI ===================== */
+function toggleEl(el){
+  if(mix[el.s]){
+    delete mix[el.s];
+    const c = document.querySelector(`.el[data-sym="${el.s}"]`);
+    if(c) c.classList.remove('active');
+  } else {
+    mix[el.s] = { el, mode:'g', value:'1' };
+    const c = document.querySelector(`.el[data-sym="${el.s}"]`);
+    if(c) c.classList.add('active');
+  }
+  render();
+}
+
+function clearAll(){
+  Object.keys(mix).forEach(s=>delete mix[s]);
+  document.querySelectorAll('.el.active').forEach(c=>c.classList.remove('active'));
+  setSelected("");
+  render();
+}
+
+function updateVal(s,v){
+  if(!mix[s]) return;
+  mix[s].value = v;
+  updateDerived(s);
+}
+
+function setMode(s,mode){
+  if(!mix[s]) return;
+  const entry = mix[s];
+  const r = calc(entry);
+
+  if(mode==='g') entry.value = fmt(r.mass,6);
+  if(mode==='mol') entry.value = fmt(r.mol,6);
+  if(mode==='atom') entry.value = fmt(r.particles,6);
+
+  entry.mode = mode;
+  render();
+  setTimeout(()=>{
+    const inp = document.querySelector(`.mix-card[data-sym="${s}"] input`);
+    if(inp) inp.focus();
+  }, 20);
+}
+
+function removeEl(s){
+  delete mix[s];
+  const c = document.querySelector(`.el[data-sym="${s}"]`);
+  if(c) c.classList.remove('active');
+  render();
+  // if removed is selected in profile, keep profile but show “not in mix”
+  refreshProfile();
+}
+
+/* ===================== PROFILE (FASTUR KAFI) ===================== */
+function setSelected(sym){
+  selectedSym = sym || "";
+  // highlight in table
+  document.querySelectorAll('.el.selected').forEach(x=>x.classList.remove('selected'));
+  if(selectedSym){
+    const c = document.querySelector(`.el[data-sym="${selectedSym}"]`);
+    if(c) c.classList.add('selected');
+  }
+  // sync dropdown
+  const ps = document.getElementById('profileSel');
+  if(ps) ps.value = selectedSym || "";
+  refreshProfile();
+}
+
+function clearSelected(){ setSelected(""); }
+
+function setSelectedFromMix(){
+  const keys = Object.keys(mix);
+  if(!keys.length){
+    setSelected("");
+    return;
+  }
+  setSelected(selectedSym && mix[selectedSym] ? selectedSym : keys[0]);
+}
+
+function refreshProfile(){
+  const out = document.getElementById('profileOut');
+  if(!selectedSym){
+    out.textContent = "Veldu frumefni til að sjá prófíl.\nTip: hægri smelltu á efni í lotukerfinu til að velja það.";
+    return;
+  }
+  const el = bySym(selectedSym);
+  if(!el){
+    out.textContent = "Villa: fann ekki frumefni.";
+    return;
+  }
+
+  let inMixTxt = "";
+  if(mix[selectedSym]){
+    const r = calc(mix[selectedSym]);
+    inMixTxt =
+`\n\nÍ blöndunni núna:
+- mól: ${fmt(r.mol,6)} mol
+- massi: ${fmt(r.mass,6)} g
+- eindir: ≈ ${fmtAvo(r.particles)} ×10²³`;
+  } else {
+    inMixTxt = "\n\n(Þetta frumefni er ekki í blöndunni.)";
+  }
+
+  out.textContent =
+`${el.name} (${el.s})
+Sætistala: ${el.n}
+Flokkur: ${labelCat(el.c)}
+Hópur: ${el.g} · Tímabil: ${el.p}
+Mólmassi: ${el.m} g/mol
+
+Af hverju hvarfast það?
+${reactivityMiniText(el)}${inMixTxt}`;
+}
+
+/* ===================== REACTION UI (2 SELECTS) ===================== */
+function updateReaction(){
+  const aSym = document.getElementById('rxA').value;
+  const bSym = document.getElementById('rxB').value;
+  const out = document.getElementById('rxOut');
+
+  if(!aSym || !bSym){
+    out.textContent = "Veldu tvö frumefni til að fá niðurstöðu.";
+    return;
+  }
+  if(aSym === bSym){
+    out.textContent = "Veldu tvö mismunandi frumefni.";
+    return;
+  }
+
+  const a = bySym(aSym), b = bySym(bSym);
+  const res = predictReactionAndProduct(a,b);
+
+  let productLine = "";
+  if(res.product){
+    productLine = `\n\nMyndar líklega: ${res.product.pretty} = ${res.product.name}`;
+  } else if(res.also && res.also.length){
+    const list = res.also.slice(0,8).map(k => `${toSubscriptFormula(k.formula)} = ${k.name}`).join("\n- ");
+    productLine = `\n\nÞekkt efni með þessum tveimur (fer eftir hlutföllum):\n- ${list}`;
+  } else {
+    productLine = `\n\nEngin “beint” vara fannst í listanum. (Getur samt hvarfast við ákveðnar aðstæður.)`;
+  }
+
+  out.textContent =
+`${a.name} (${a.s}) + ${b.name} (${b.s})
+
+Niðurstaða: ${res.likely ? "✅" : "❌"} ${res.title}
+
+${res.explain}${productLine}`;
+}
+
+/* ===================== COMPOUND FINDER UI (2+ SELECT) ===================== */
+function updateCompoundFinder(){
+  const sel = document.getElementById('cmpSel');
+  const chosen = Array.from(sel.selectedOptions).map(o=>o.value).filter(Boolean);
+  const out = document.getElementById('cmpOut');
+
+  if(chosen.length < 2){
+    out.textContent = "Veldu 2 eða fleiri (CTRL/⌘ fyrir mörg).";
+    return;
+  }
+
+  const chosenSet = new Set(chosen);
+
+  // known compounds that are subset of chosen elements
+  const matches = KNOWN.filter(k => countsSubset(k.counts, chosenSet));
+
+  // If exactly 2, offer auto ionic formula if metal+nonmetal
+  let ionicLine = "";
+  if(chosen.length === 2){
+    const a = bySym(chosen[0]), b = bySym(chosen[1]);
+    if(a && b && ((isMetal(a) && isNonmetal(b)) || (isMetal(b) && isNonmetal(a)))){
+      const ionic = buildBinaryIonicFormula(a,b);
+      if(ionic){
+        const known = KNOWN.find(k => k.formula === ionic.formula);
+        ionicLine = `\n\nSjálfvirkt jónasamband:\n- ${toSubscriptFormula(ionic.formula)} = ${known ? known.name : "Jónasamband (salt)"}`;
+      }
+    }
+  }
+
+  let lines = [];
+  lines.push(`Valið: ${chosen.join(", ")}`);
+  lines.push("");
+
+  if(matches.length){
+    lines.push("Þekkt efni/sameindir sem passa við valið:");
+    matches.slice(0,14).forEach(k=>{
+      lines.push(`- ${toSubscriptFormula(k.formula)} = ${k.name}`);
+    });
+  } else {
+    lines.push("Engin þekkt sameind fannst í listanum sem passar við þessi frumefni.");
+  }
+
+  out.textContent = lines.join("\n") + ionicLine;
+}
+
+/* ===================== MIX RENDER ===================== */
+function render(){
+  const keys = Object.keys(mix);
+  const emptyEl = document.getElementById('emptyState');
+  const listEl = document.getElementById('mixList');
+  const totals = document.getElementById('totalsSection');
+
+  listEl.querySelectorAll('.mix-card').forEach(c=>c.remove());
+
+  if(!keys.length){
+    emptyEl.style.display = '';
+    totals.style.display = 'none';
+    document.getElementById('formulaText').innerHTML = '—';
+    document.getElementById('mmassPill').style.display = 'none';
+    fillSelectors(); // keep selectors updated
+    refreshProfile();
+    updateReaction();
+    updateCompoundFinder();
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  totals.style.display = '';
+
+  let fHtml = '', totalMmass=0;
+  keys.forEach(s=>{ fHtml += mix[s].el.s; totalMmass += mix[s].el.m; });
+  document.getElementById('formulaText').innerHTML = fHtml;
+  const pill = document.getElementById('mmassPill');
+  pill.style.display = '';
+  pill.textContent = `M = ${fmt(totalMmass)} g/mol`;
+
+  let tMol=0, tMass=0, tPart=0;
+
+  keys.forEach(s=>{
+    const entry = mix[s];
+    const [cls,color] = CAT[entry.el.c] || ['nonmetal','#00e5a0'];
+    const r = calc(entry);
+    tMol += r.mol; tMass += r.mass; tPart += r.particles;
+
+    const gOn = entry.mode==='g'?'on':'';
+    const molOn = entry.mode==='mol'?'on':'';
+    const atOn = entry.mode==='atom'?'on':'';
+    const unitLbl = entry.mode==='g'?'g': entry.mode==='mol'?'mol':'atóm';
+
+    const card = document.createElement('div');
+    card.className = 'mix-card';
+    card.dataset.sym = s;
+    card.style.borderLeft = `3px solid ${color}70`;
+
+    card.innerHTML = `
+      <div class="card-sym ${cls}" style="color:${color};background:${color}18;">
+        <span class="s">${entry.el.s}</span>
+        <span class="n">${entry.el.n}</span>
+      </div>
+      <div>
+        <div class="card-name">${entry.el.name}</div>
+        <div class="card-mmass">Flokkur: ${labelCat(entry.el.c)} · M = ${entry.el.m} g/mol</div>
+        <div class="input-row">
+          <div class="inp-wrap">
+            <input type="text" value="${escapeHtml(entry.value)}" oninput="updateVal('${s}',this.value)" placeholder="0">
+            <span class="inp-unit" id="unit-${s}">${unitLbl}</span>
+          </div>
+          <div class="mode-tabs">
+            <button class="mtab ${gOn}" onclick="setMode('${s}','g')">g</button>
+            <button class="mtab ${molOn}" onclick="setMode('${s}','mol')">mol</button>
+            <button class="mtab ${atOn}" onclick="setMode('${s}','atom')">atóm</button>
+          </div>
+          <button class="mini-btn" onclick="setSelected('${s}')">Prófíl</button>
+        </div>
+        <div class="derived" id="d-${s}">
+          <span class="dv">${fmt(r.mol,4)}</span> mol &nbsp;·&nbsp;
+          <span class="dv">${fmt(r.mass,4)}</span> g &nbsp;·&nbsp;
+          <span class="da"><span class="dv">${fmtAvo(r.particles)}</span> ×10²³</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
+        <button class="remove-x" onclick="removeEl('${s}')" title="Fjarlægja">×</button>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+
+  updateTotals(tMol,tMass,tPart,keys.length);
+  fillSelectors();
+  refreshProfile();
+  updateReaction();
+  updateCompoundFinder();
+}
+
+function updateDerived(s){
+  const entry = mix[s];
+  if(!entry) return;
+  const r = calc(entry);
+  const d = document.getElementById('d-'+s);
+  if(d) d.innerHTML = `
+    <span class="dv">${fmt(r.mol,4)}</span> mol &nbsp;·&nbsp;
+    <span class="dv">${fmt(r.mass,4)}</span> g &nbsp;·&nbsp;
+    <span class="da"><span class="dv">${fmtAvo(r.particles)}</span> ×10²³</span>
+  `;
+  recalcTotals();
+  refreshProfile();
+}
+function recalcTotals(){
+  let tMol=0,tMass=0,tPart=0;
+  Object.keys(mix).forEach(s=>{
+    const r = calc(mix[s]);
+    tMol += r.mol; tMass += r.mass; tPart += r.particles;
+  });
+  updateTotals(tMol,tMass,tPart,Object.keys(mix).length);
+}
+function updateTotals(mol,mass,part,n){
+  document.getElementById('ttlMol').textContent = fmt(mol,4);
+  document.getElementById('ttlMass').textContent = fmt(mass,4);
+  document.getElementById('ttlMmass').textContent = (n>0 && mol>0) ? fmt(mass/mol,4) : '—';
+  document.getElementById('ttlAvo').textContent = fmtAvo(part);
+}
+
+/* ===================== SELECT POPULATION ===================== */
+function fillSelectors(){
+  // profileSel: all elements
+  const prof = document.getElementById('profileSel');
+  const keepP = prof.value;
+  prof.innerHTML = `<option value="">Veldu frumefni</option>` + EL.slice().sort((a,b)=>a.n-b.n)
+    .map(e=>`<option value="${e.s}">${e.s} — ${e.name}</option>`).join('');
+  if(keepP) prof.value = keepP;
+
+  // rx selects: all elements
+  const rxA = document.getElementById('rxA');
+  const rxB = document.getElementById('rxB');
+  const keepA = rxA.value, keepB = rxB.value;
+  rxA.innerHTML = `<option value="">Frumefni A</option>` + EL.slice().sort((a,b)=>a.n-b.n)
+    .map(e=>`<option value="${e.s}">${e.s} — ${e.name}</option>`).join('');
+  rxB.innerHTML = `<option value="">Frumefni B</option>` + EL.slice().sort((a,b)=>a.n-b.n)
+    .map(e=>`<option value="${e.s}">${e.s} — ${e.name}</option>`).join('');
+  if(keepA) rxA.value = keepA;
+  if(keepB) rxB.value = keepB;
+
+  // compound multiselect: all elements
+  const cmp = document.getElementById('cmpSel');
+  const chosen = new Set(Array.from(cmp.selectedOptions).map(o=>o.value));
+  cmp.innerHTML = EL.slice().sort((a,b)=>a.n-b.n)
+    .map(e=>{
+      const sel = chosen.has(e.s) ? "selected" : "";
+      return `<option value="${e.s}" ${sel}>${e.s} — ${e.name}</option>`;
+    }).join('');
+}
+
+/* ===================== ESCAPE ===================== */
+function escapeHtml(s){
+  return (s ?? '').toString()
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+/* ===================== INIT ===================== */
+buildTable();
+fillSelectors();
+render();
+refreshProfile();
+updateReaction();
+updateCompoundFinder();
+</script>
+</body>
+</html>
